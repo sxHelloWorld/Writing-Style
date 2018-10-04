@@ -14,7 +14,7 @@ def main():
 def test():
     user = 'wsuser'
     password = ''
-    conn = pymysql.connect(host='ws-db.cxn6r23mlloe.us-east-1.rds.amazonaws.com',user=user, password=password, db='corpus')
+    conn = pymysql.connect(host='ws-db.cxn6r23mlloe.us-east-1.rds.amazonaws.com',user=user, db='corpus')
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM new_table_python")
     data = cursor.fetchall()
