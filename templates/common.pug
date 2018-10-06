@@ -1,0 +1,60 @@
+html
+    head
+        link(
+            rel="stylesheet",
+            href="style/style.css"
+        )
+        link(
+            rel="stylesheet",
+            href="style/animate.css"
+        )
+        link(
+            rel="stylesheet",
+            href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css",
+            integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm",
+            crossorigin="anonymous"
+        )
+        link(
+            rel="stylesheet",
+            href="https://use.fontawesome.com/releases/v5.3.1/css/all.css",
+            integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU",
+            crossorigin="anonymous"
+        )
+        link(
+            href="https://fonts.googleapis.com/css?family=Antic|Handlee"
+            rel="stylesheet"
+        )
+        
+
+        script(
+            src='https://code.jquery.com/jquery-3.3.1.min.js', 
+            integrity='sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=', 
+            crossorigin='anonymous'
+        )
+        script(
+            src='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js', 
+            integrity='sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl', 
+            crossorigin='anonymous'
+        )
+        script(
+            src="script/animate.js"
+        )
+        script(
+            src="script/main.js"
+        )
+        script(
+            src="script/writinganalyzer.js"
+        )
+
+    body
+        header
+            .container
+                .row
+                    .col-md-1
+                    .col-md-10
+                        .nav-content
+                            .d-flex.flex-row
+                                img(src="images/pencil.svg", id="logo-header-image")
+                                h1.page-heading Writing Style Analyzer
+                    .col-md-1
+        block content

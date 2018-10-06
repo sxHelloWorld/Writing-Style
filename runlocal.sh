@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 imageName=ws
 containerName=ws-container
