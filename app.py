@@ -28,6 +28,29 @@ def test():
 def test2():
     return render_template('test2.pug')
 
+@app.route("/getwordlist")
+def getwordlist():
+    user = 'wsuser'
+    password = ''
+    headwordnumber = request.args.get('head', default='', type=str)
+    groupnumber = request.args.get('group', default='', type=str)
+    conn = pymysql.connect(host='ws-db.cxn6r23mlloe.us-east-1.rds.amazonaws.com', user=user, db='corpus')
+    # Return data as dictionary
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
+    cursor.execute("SELECT word FROM thesaurus WHERE `headwordnumber`=" + headwordnumber + " AND `groupnumber`=" + groupnumber)
+    # Alternative column
+    # cursor.execute("SELECT word FROM thesaurus WHERE `headwordnumber_group`='" + headwordnumber + " - " + groupnumber + "'")
+    response = ''
+    data = cursor.fetchone()
+    while data is not None:
+        if response != '':
+            response += ','
+        response += data['word']
+        data = cursor.fetchone()
+    if response != '':
+        return response
+    return "notfound"
+
 @app.route("/getheadlist")
 def getheadlist():
     user = 'wsuser'
