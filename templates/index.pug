@@ -5,20 +5,24 @@ block content
         .row
             .col-md-2
             .col-md-8
-                p Paste your writing below then analyze it to get suggestions on improving your writing style!
-                div.content-input-container
+                p Enter your writing below then analyze it to get suggestions on improving your writing style!
+                .content-input-container
                     textarea.content-input(placeholder="Enter here...")
                         | iPhones are a really great technology that help people everyday. The technology is used by so many people all over the world to get their jobs done. Apple makes lotsa stuff that's really great. Their MacBook Pro's are very snazzy and clean looking, while still having great performance. The trackpad is very big on the new one, and the keyboard is very satisfying to use. I like it very much.
                         |
                         | The Apple Watch is also very good. It has a bigger screen this year and there is even an ECG built in. The bigger watch is much better than the previous year's. It is faster too. Apple came out with a new color too, gold which is better than before. It's a cool time to be alive.
-                .d-flex.flex-row-reverse
-                    .py-2
-                        button(id="analyze-button").btn.btn-success Analyze
+                button#analyze-button.btn.btn-success Analyze
             .col-md-2
-    .container(id="review-container")
+    .container#review-container
+        p#back-button
+            i.fas.fa-arrow-left
         .row
-            .col-md-1
-            .col-md-6
+            .col-lg-1
+            .col-lg-6.col-md-
+                p#disclaimer-box 
+                    span
+                        img(src='static/images/warning.svg')
+                    | After you make changes you may need to fix grammar issues
                 #highlight-suggestion-requested.highlight-suggestion
                     .highlight-suggestion-title.highlight-suggestion-title-requested-word Replacements
                     .highlight-suggestion-content.highlight-suggestion-content-requested
@@ -41,7 +45,7 @@ block content
                         .highlight-suggestion-title.highlight-suggestion-title-repeated-word Repeated Word
                         .highlight-suggestion-content This word has shown up 4 times in this paragraph, consider using a different word like <i>decorum</i>.
                     | semper, vitae interdum purus volutpat. Aliquam sodales odio ac vestibulum cursus. Aenean tincidunt maximus nisi, id pellentesque lacus suscipit eu. Morbi ullamcorper porta lectus quis lacinia. Suspendisse erat ante, tempor in rhoncus at, auctor eleifend ligula. Phasellus ornare sagittis nibh. Vestibulum posuere id arcu quis posuere. Etiam arcu ligula, pretium vitae mauris at, aliquam sollicitudin orci. Vestibulum laoreet ipsum ultrices diam faucibus pretium. Proin sed feugiat lorem. Quisque orci ligula, semper quis tincidunt sed, facilisis vel eros. Interdum et malesuada fames ac ante ipsum primis in faucibus.
-            .col-md-4
+            .col-lg-4.col-md-4.p-0
                 .accordian
                     .card.card-suggestions
                         .card-body.card-body-suggestion-blurb
@@ -65,4 +69,5 @@ block content
                         .collapse.collapse-suggestions(id="collapseTwo", aria-labelledby="headingRepeatedWords" data-parent="#accordion")
                             .card-body.card-body-suggestion(id="repeatedWordsCard")
                                 | And even more stuff
-            .col-md-1
+                a(href="#", download='writing_analysis_summary.txt')#btn-summary.btn.btn-success.mt-1.float-right Download Summary
+            .col-lg-1

@@ -54,9 +54,26 @@ function getWordIndexFromLetterIndex(text, letterIndex) {
     return -1;
 }
 
+var firstTime = true;
 $(document).ready(function() {
     var replacingWord = false;
     var selectedWordInfo = undefined;
+
+    $('#back-button').on('click', function() {
+        window.scrollTo(0, 0);
+
+        // collapse the suggestion lists and make the chevrons point
+        // in the correct direction
+        $('.collapse-suggestions').collapse('hide');
+        $('.chevron').removeClass('fa-chevron-up');
+        $('.chevron').addClass('fa-chevron-down');
+
+        $('#submission-container').css('display', 'block');
+        $('#review-container').css('display', 'none');
+
+        // remove all event handlers from the element
+        $('.highlight-suggestion').off();
+    });
 
     $('#analyze-button').on('click', function() {
         window.scrollTo(0, 0);
@@ -73,13 +90,20 @@ $(document).ready(function() {
 
         updateDisplaySuggestionCounts(analyzer);
 
+        let summaryUrl = 'data:application/octet-stream;charset=utf-8;base64,' + btoa(analyzer.getSummary());
+        $('#btn-summary').attr('href', summaryUrl);
+
         $('.highlight').on('mouseleave', function(e) {
             $(e.currentTarget).data('mouseover', false);
+            
+            var $suggestionBox = $(e.currentTarget).next('.highlight-suggestion');
+            handleClosingHighlightSuggestion($suggestionBox);
         });
 
         $('.highlight').on('mouseenter', function(e) {
+            var $suggestionBox = $(e.currentTarget).next('.highlight-suggestion');
             if (!$(e.currentTarget).hasClass('highlight') || $(e.currentTarget).next('.highlight-suggestion').is(':animated') 
-                || replacingWord ) {
+                || replacingWord || $suggestionBox.data('recentlyClosedPopover')) {
 
                 return;
             }
@@ -87,15 +111,26 @@ $(document).ready(function() {
 
             setTimeout(function() {
                 // if the cursor isn't still over the word, then don't display the issue dialog
-                if (!$(e.currentTarget).data('mouseover')) {
+                // or if the user recently dismissed the popover then don't immediately show it
+                // again because they may have just moused over
+                if (!$(e.currentTarget).data('mouseover') || $suggestionBox.data('recentlyClosedPopover')) {
                     return;
                 }
 
                 var wordOffset = $(e.currentTarget).offset();
-                var left = wordOffset.left + "px";
-                var top = (wordOffset.top - $(document).scrollTop()) + "px";
+                var left = (wordOffset.left) + "px";
+
+                // the minus 2 is for the border height of the word, it's the underline
+                var top = (wordOffset.top + $(e.currentTarget).outerHeight() - 2 - $(document).scrollTop()) + "px";
                 
-                var $suggestionBox = $(e.currentTarget).next('.highlight-suggestion');
+                // show indication in the right panel of the word selected
+                $("#" + $(e.currentTarget).attr('id').replace('-word', '') + "-list-item").closest('.collapse-suggestions').collapse('show');
+                $("#" + $(e.currentTarget).attr('id').replace('-word', '') + "-list-item").animateCss('rubberBand');
+
+                // hide all of the suggestion boxes already visible, only allow one at a time
+                $('.highlight-suggestion').hide('fold');
+
+                $suggestionBox.data('mouseover', true);
                 $suggestionBox.toggle('fold');
 
                 $suggestionBox.css('left', left);
@@ -110,37 +145,36 @@ $(document).ready(function() {
 
         // handle closing the suggestion popover when the user moves their mouse off it
         $('.highlight-suggestion').on('mouseleave', function(e) {
-            $(e.currentTarget).data('mouseover', false);
+            handleClosingHighlightSuggestion($(e.currentTarget));
+        });
+
+        function handleClosingHighlightSuggestion($suggestionBox) {
+            $suggestionBox.data('mouseover', false);
             if (replacingWord) {
                 replacingWord = false;
                 return;
             }
 
             // delay to give the user an opportunity to bring their cursor back over the popover
+            $suggestionBox.data('recentlyClosedPopover', true);
             setTimeout(function() {
-                if (!$(e.currentTarget).data('mouseover')) {
-                    $(e.currentTarget).toggle('fold');
+                if (!$suggestionBox.data('mouseover')) {
+                    $suggestionBox.hide('fold');
                     selectedWordInfo = undefined;
+
+                    setTimeout(function() {
+                        $suggestionBox.data('recentlyClosedPopover', false);
+                    }, 300);
+                } else {
+                    $suggestionBox.data('recentlyClosedPopover', false);
                 }
             }, 300);
-        });
+        }
 
         // handle jumping to a word when pressing the link
         $('.suggestion-anchor-link').on('click', function(e) {
             let wordId = e.currentTarget.getAttribute('href').replace('#', '');
             $('#' + wordId + '-word').animateCss('heartBeat');
-        });
-
-        // handle changing the chevron direction when folding/unfolding the accordian
-        $('.card-header-suggestion').on('click', function(e) {
-            let $chevron = $(e.currentTarget).find('.chevron');
-            if ($chevron.hasClass('fa-chevron-up')) {
-                $chevron.removeClass('fa-chevron-up');
-                $chevron.addClass('fa-chevron-down');
-            } else if ($chevron.hasClass('fa-chevron-down')) {
-                $chevron.removeClass('fa-chevron-down');
-                $chevron.addClass('fa-chevron-up');
-            }
         });
 
         // handle when the user replaces a word
@@ -149,7 +183,9 @@ $(document).ready(function() {
             var wordToReplaceWith = $(e.currentTarget).attr('data-replace-word');
 
             $('#' + wordId + '-word').removeClass('highlight highlight-informal-word highlight-repeated-word');
-            $('#' + wordId + '-word').text(wordToReplaceWith);
+            if (wordToReplaceWith !== '!!IGNORE!!') {
+                $('#' + wordId + '-word').text(wordToReplaceWith);
+            }
 
             replacingWord = true;
             $(e.currentTarget).closest('.highlight-suggestion').toggle('fold');
@@ -162,24 +198,40 @@ $(document).ready(function() {
             updateDisplaySuggestionCounts(analyzer);
         });
 
-        // handle when the user clicks on a requested word to replace with
-        $('.list-group-item-suggestion-repeated').on('click', function(event) {
-            if (selectedWordInfo) {
-                // add a period if the original word had it
-                let replaceWord = $(event.currentTarget).text();
-                let originalText = $(selectedWordInfo.parentElement).text();
+        if (firstTime) {
+            firstTime = false;
+            
+            // handle changing the chevron direction when folding/unfolding the accordian
+            $('.card-header-suggestion').on('click', function(e) {
+                let $chevron = $(e.currentTarget).find('.chevron');
+                if ($chevron.hasClass('fa-chevron-up')) {
+                    $chevron.removeClass('fa-chevron-up');
+                    $chevron.addClass('fa-chevron-down');
+                } else if ($chevron.hasClass('fa-chevron-down')) {
+                    $chevron.removeClass('fa-chevron-down');
+                    $chevron.addClass('fa-chevron-up');
+                }
+            });
 
-                if (originalText.indexOf('.') !== -1) {
-                    replaceWord += '.';
+            // handle when the user clicks on a requested word to replace with
+            $('.list-group-item-suggestion-repeated').on('click', function(event) {
+                if (selectedWordInfo) {
+                    // add a period if the original word had it
+                    let replaceWord = $(event.currentTarget).text();
+                    let originalText = $(selectedWordInfo.parentElement).text();
+
+                    if (originalText.indexOf('.') !== -1) {
+                        replaceWord += '.';
+                    }
+
+                    $(selectedWordInfo.parentElement).text(replaceWord + ' ');
+                    selectedWordInfo = undefined;
                 }
 
-                $(selectedWordInfo.parentElement).text(replaceWord + ' ');
-                selectedWordInfo = undefined;
-            }
-
-            replacingWord = true;
-            $('#highlight-suggestion-requested').toggle('fold');
-        });
+                replacingWord = true;
+                $('#highlight-suggestion-requested').toggle('fold');
+            });
+        }
 
         // handle when the user double clicks a word to bring up the requested word popover
         $('.span-word').on('dblclick', function(event) {

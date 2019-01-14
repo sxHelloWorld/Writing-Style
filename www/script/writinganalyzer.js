@@ -8,42 +8,42 @@ function WritingAnalyzer(text) {
         {
             index: 11,
             type: 'repeated',
-            replaceWord: 'hardware'
+            replaceWords: ['hardware', 'products', 'phones']
         },
         {
             index: 29,
             type: 'informal',
-            replaceWord: 'several'
+            replaceWords: ['several', 'many']
         },
         {
             index: 30,
             type: 'informal',
-            replaceWord: 'products'
+            replaceWords: ['products', 'items']
         },
         {
             index: 39,
             type: 'informal',
-            replaceWord: 'professional'
+            replaceWords: ['professional', 'high-end', 'sleek']
         },
         {
             index: 68,
             type: 'repeated',
-            replaceWord: 'so'
+            replaceWords: ['so', 'a lot']
         },
         {
             index: 93,
             type: 'repeated',
-            replaceWord: 'larger'
+            replaceWords: ['larger', 'wider']
         },
         {
             index: 117,
             type: 'repeated',
-            replaceWord: 'nicer'
+            replaceWords: ['nicer', 'fancier']
         },
         {
             index: 122,
             type: 'informal',
-            replaceWord: 'wonderful'
+            replaceWords: ['wonderful', 'amazing', 'futuristic']
         },
     ];
 }
@@ -72,6 +72,24 @@ WritingAnalyzer.prototype.addReplaceWord = function(wordIndex, newWord) {
     this.replaceWords[wordIndex] = newWord;
 }
 
+WritingAnalyzer.prototype.getSummary = function() {
+    let summary = 'Writing Style Analysis\n\n';
+
+    summary += 'Repeated Words\n';
+    for (let repeatedWord of this.repeatedWords) {
+        summary += repeatedWord.word + '\t->\t' + repeatedWord.suggestion.replaceWords.join(', ') + '\n';
+    }
+    summary += '\n';
+
+    summary += 'Informal Words\n';
+    for (let informalWord of this.informalWords) {
+        summary += informalWord.word + '\t->\t' + informalWord.suggestion.replaceWords.join(', ') + '\n';
+    }
+
+    summary += '\n';
+    return summary;
+}
+
 WritingAnalyzer.prototype._getHtmlForWord = function(word, wordIndex) {
     if (this.specifiedSuggestions) {
         // check if there's a specified suggestion for the current word
@@ -82,7 +100,8 @@ WritingAnalyzer.prototype._getHtmlForWord = function(word, wordIndex) {
         if (suggestionForCurrentWord) {
             let suggestion = { 
                 word: word.trim(),
-                id: word.trim() + wordIndex
+                id: word.trim() + wordIndex,
+                suggestion: suggestionForCurrentWord
             };
             if (suggestionForCurrentWord.type === 'informal') {
                 this.informalWords.push(suggestion);
@@ -91,7 +110,7 @@ WritingAnalyzer.prototype._getHtmlForWord = function(word, wordIndex) {
             }
 
             return this._getSuggestionHtml(word.trim(), word.trim() + wordIndex, suggestionForCurrentWord.type, 
-                suggestionForCurrentWord.replaceWord);
+                suggestionForCurrentWord.replaceWords);
         } else {
             return this._getWordHtml(word.trim(), word.trim() + wordIndex);
         }
@@ -137,24 +156,29 @@ WritingAnalyzer.prototype.randomlyAnalyze = function() {
     }
 };
 
-WritingAnalyzer.prototype._getSuggestionHtml = function(word, wordId, type, replaceWord, suggestionMessage) {
+WritingAnalyzer.prototype._getSuggestionHtml = function(word, wordId, type, replaceWords, suggestionMessage) {
     let typeTitle = type[0].toUpperCase() + type.substr(1); 
 
     if (type === 'informal') {
-        var suggestionMessage = `This word is informal. A much better word would be <i>${replaceWord}</i>, it's more professional.`;
+        var suggestionMessage = '<p class="text-center highlight-suggestion-label highlight-suggestion-label-informal">Informal Word</p>';
     } else {
-        var suggestionMessage = `This word has been used too often in your writing. Consider changing ${word} to <i>${replaceWord}</i>.`;
+        var suggestionMessage = '<p class="text-center highlight-suggestion-label highlight-suggestion-label-repeated">Repeated Word</p>';
     }
 
-    const suggestionTemplate = `
+    let suggestionTemplate = `
         <a class="highlight-anchor" id="${wordId}"></a>
         <span class="highlight highlight-${type}-word span-word" id="${wordId}-word">${word}</span>
         <div class="highlight-suggestion highlight-suggestion-${type}-word">
-            <div class="highlight-suggestion-title highlight-suggestion-title-${type}-word">${typeTitle}</div>
-            <div class="highlight-suggestion-content">${suggestionMessage}</div>
-            <button class="btn btn-primary highlight-btn-replace highlight-btn-replace-${type}" data-replace-word="${replaceWord}" data-word-id="${wordId}">Replace Word</button>
-        </div>
+            <button class="btn btn-primary highlight-btn-replace highlight-btn-replace-ignore highlight-btn-replace-ignore-${type}" data-replace-word="!!IGNORE!!" data-word-id="${wordId}">Ignore Suggestion</button>
+        `;
+    for (let replaceWord of replaceWords) {
+        let buttonHtml = `<button class="btn btn-primary highlight-btn-replace highlight-btn-replace-${type}" data-replace-word="${replaceWord}" data-word-id="${wordId}">${replaceWord}</button>`;
+        suggestionTemplate += buttonHtml;
+    }
+    suggestionTemplate += `
+        ${suggestionMessage}
     `;
+    suggestionTemplate += '</div>';
 
     return suggestionTemplate;
 };
