@@ -1,0 +1,73 @@
+html
+	head
+		link(
+			rel="stylesheet",
+			href="static/style/style.css"
+		)
+		link(
+			rel="stylesheet",
+			href="static/style/animate.css"
+		)
+		link(
+			rel="stylesheet",
+			href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css",
+			integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm",
+			crossorigin="anonymous"
+		)
+		link(
+			rel="stylesheet",
+			href="https://use.fontawesome.com/releases/v5.3.1/css/all.css",
+			integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU",
+			crossorigin="anonymous"
+		)
+		link(
+			href="https://fonts.googleapis.com/css?family=Antic|Handlee"
+			rel="stylesheet"
+		)
+		script(
+			src='https://code.jquery.com/jquery-3.3.1.min.js', 
+			integrity='sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=', 
+			crossorigin='anonymous'
+		)
+		script(
+			src='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js', 
+			integrity='sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl', 
+			crossorigin='anonymous'
+		)
+		script(
+			src="static/script/query.js"
+		)
+	body
+		header
+			.container
+				.row
+					.col-md-1
+					.col-md-10
+						.nav-content
+							.d-flex.flex-row
+								img(src="static/images/pencil.svg", id="logo-header-image")
+								h1.page-heading Writing Style Analyzer
+					.col-md-1
+		block content
+			.container
+				.row
+					.col-md2
+					.col-md8
+						p Enter word to get head list and group number
+						p(id="error")
+						div.control-input-container
+							input(type="text" id="word" name="word")
+							button(id="queryButton" onclick="getHeadAndGroup();") Get Head and Group
+					.col-md2
+				.row
+					.col-md2
+						p Head for the word:
+						p(id="head")
+				.row
+					.col-md2
+						p Group for the word:
+						p(id="group")
+				.row
+					.col-md2
+						p Subgroup for the word:
+						p(id="subgroup")
