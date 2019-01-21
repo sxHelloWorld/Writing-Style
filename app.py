@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request
 import pymysql
+import json
 
 app = Flask(__name__, static_url_path='/static', static_folder='www')
 app.jinja_env.add_extension('pypugjs.ext.jinja.PyPugJSExtension')
@@ -11,6 +12,25 @@ def main():
 @app.route("/prototype")
 def prototype():
     return render_template('index.pug')
+
+@app.route('/analyze', methods=['POST'])
+def analyze():
+    writing_sample = request.data
+    if writing_sample is not None and len(writing_sample.strip().split()) > 4:
+        suggestion1 = {
+            'index': 1,
+            'type': 'repeated',
+            'replaceWords': ['dog', 'cat', 'mouse']
+        }
+        suggestion2 = {
+            'index': 3,
+            'type': 'informal',
+            'replaceWords': ['watermelon', 'cherry', 'apple']
+        }
+
+        return json.dumps([suggestion1, suggestion2])
+    else:
+        return '[]'
 
 @app.route("/test")
 def test():

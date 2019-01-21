@@ -3,49 +3,6 @@ function WritingAnalyzer(text) {
     this.htmlContent = '';
     this.repeatedWords = [];
     this.informalWords = [];
-
-    this.specifiedSuggestions = [
-        {
-            index: 11,
-            type: 'repeated',
-            replaceWords: ['hardware', 'products', 'phones']
-        },
-        {
-            index: 29,
-            type: 'informal',
-            replaceWords: ['several', 'many']
-        },
-        {
-            index: 30,
-            type: 'informal',
-            replaceWords: ['products', 'items']
-        },
-        {
-            index: 39,
-            type: 'informal',
-            replaceWords: ['professional', 'high-end', 'sleek']
-        },
-        {
-            index: 68,
-            type: 'repeated',
-            replaceWords: ['so', 'a lot']
-        },
-        {
-            index: 93,
-            type: 'repeated',
-            replaceWords: ['larger', 'wider']
-        },
-        {
-            index: 117,
-            type: 'repeated',
-            replaceWords: ['nicer', 'fancier']
-        },
-        {
-            index: 122,
-            type: 'informal',
-            replaceWords: ['wonderful', 'amazing', 'futuristic']
-        },
-    ];
 }
 
 WritingAnalyzer.prototype.removeWord = function(wordId) {
@@ -114,32 +71,29 @@ WritingAnalyzer.prototype._getHtmlForWord = function(word, wordIndex) {
         } else {
             return this._getWordHtml(word.trim(), word.trim() + wordIndex);
         }
-    } else {
-        // for simplicity only suggest changes to words that don't contain numbers or punctuation
-        // and decide if this word should have a suggestion
-        if (word.match(/^\w+$/g) && Math.random() < 0.05) {
-            // decide if this word should be informal or repeated
-            if (Math.random() < 0.5) {
-                var suggestionType = 'repeated';
-                this.repeatedWords.push({
-                    word: word.trim(),
-                    id: word + wordIndex
-                });
-            } else {
-                var suggestionType = 'informal';
-                this.informalWords.push({
-                    word: word.trim(),
-                    id: word.trim() + wordIndex
-                });
-            }
-            return this._getSuggestionHtml(word.trim(), word.trim() + wordIndex, suggestionType, '');
-        } else {
-            return this._getWordHtml(word.trim(), word.trim() + wordIndex);
-        }
-    }
+    } 
 }
 
-WritingAnalyzer.prototype.randomlyAnalyze = function() {
+WritingAnalyzer.prototype.analyze = function(done) {
+    $.ajax({
+        url: '/analyze',
+        type: 'POST',
+        data: this.text,
+        contentType: 'text/html'
+    }).done(function (data) {
+        this.specifiedSuggestions = JSON.parse(data);
+        this._getHtmlForAllText();
+
+        done(this.htmlContent);
+    }.bind(this)).fail(function(error) {
+        this.specifiedSuggestions = [];
+        this._getHtmlForAllText();
+
+        done(this.htmlContent);
+    }.bind(this));
+}
+
+WritingAnalyzer.prototype._getHtmlForAllText = function() {
     let paragraphs = this.text.split(/\t|\n\n/);
     this.htmlContent = '';
 
@@ -154,11 +108,9 @@ WritingAnalyzer.prototype.randomlyAnalyze = function() {
         }
         this.htmlContent += '</div>'
     }
-};
+}
 
 WritingAnalyzer.prototype._getSuggestionHtml = function(word, wordId, type, replaceWords, suggestionMessage) {
-    let typeTitle = type[0].toUpperCase() + type.substr(1); 
-
     if (type === 'informal') {
         var suggestionMessage = '<p class="text-center highlight-suggestion-label highlight-suggestion-label-informal">Informal Word</p>';
     } else {
