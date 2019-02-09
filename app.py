@@ -7,6 +7,7 @@ app = Flask(__name__, static_url_path='/static', static_folder='www')
 app.jinja_env.add_extension('pypugjs.ext.jinja.PyPugJSExtension')
 
 db_user = "wsuser"
+db_password = ""
 db_host = "ws-db.cxn6r23mlloe.us-east-1.rds.amazonaws.com"
 
 
