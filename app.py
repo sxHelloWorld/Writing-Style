@@ -1,9 +1,11 @@
 from flask import Flask, render_template, request
+from flask_cors import CORS
 import pymysql
 import json
 import urllib
 
 app = Flask(__name__, static_url_path='/static', static_folder='www')
+CORS(app)
 app.jinja_env.add_extension('pypugjs.ext.jinja.PyPugJSExtension')
 
 db_user = "wsuser"
