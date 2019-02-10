@@ -3,6 +3,7 @@ from flask_cors import CORS
 import pymysql
 import json
 import urllib
+from analyzer import Analyzer
 
 app = Flask(__name__, static_url_path='/static', static_folder='www')
 CORS(app)
@@ -33,20 +34,16 @@ def prototype():
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
-    writing_sample = request.data
-    if writing_sample is not None and len(writing_sample.strip().split()) > 4:
-        suggestion1 = {
-            'index': 1,
-            'type': 'repeated',
-            'replaceWords': ['dog', 'cat', 'mouse']
-        }
-        suggestion2 = {
-            'index': 3,
-            'type': 'informal',
-            'replaceWords': ['watermelon', 'cherry', 'apple']
-        }
+    writing_sample_data = request.data
+    if writing_sample_data is None:
+        return '[]'
+    writing_sample = writing_sample_data.decode('utf-8')
 
-        return json.dumps([suggestion1, suggestion2])
+    if writing_sample is not None and len(writing_sample.strip().split()) > 4:
+        anlyzer = Analyzer(writing_sample)
+        suggestions = anlyzer.analyze()
+
+        return json.dumps(suggestions)
     else:
         return '[]'
 
