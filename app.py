@@ -99,7 +99,7 @@ def surveyQuery():
         wordid = "1"
     else:
         wordid = str(int(wordid) + 1)
-    if int(wordid) > 1000:
+    if int(wordid) > 830:
         conn.close()
         return "done"
     cursor.execute("SELECT word FROM top_informal_words WHERE `id`=" + wordid)
