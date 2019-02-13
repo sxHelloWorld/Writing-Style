@@ -18,7 +18,7 @@ class Analyzer:
     def __init__(self, writing):
         self.writing = writing
 
-        self.connection = pymysql.connect(host='ws-db.cxn6r23mlloe.us-east-1.rds.amazonaws.com', user='ws_root', password='NIlmodOjvetikc2', db='corpus')
+        self.connection = pymysql.connect(host='ws-db.cxn6r23mlloe.us-east-1.rds.amazonaws.com', user='wsuser', password='', db='corpus')
         self.cursor = self.connection.cursor(pymysql.cursors.DictCursor)
 
         self.informal_word_file = WordFile('words.txt')
