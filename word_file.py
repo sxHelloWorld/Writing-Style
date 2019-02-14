@@ -8,11 +8,11 @@ class WordFile:
         self.words = {}
         with open(filepath, 'r') as word_file:
             for line in word_file:
-                line_components = line.split(';')
-                if len(line_components) != 2:
+                line_components = line.replace('"', '').split(',')
+                if len(line_components) < 2:
                     raise IOError()
 
-                word = line_components[0]
-                headwords = line_components[1].split(',')
+                word = line_components[1]
+                headwords = line_components[1:]
 
                 self.words[word] = [h.strip() for h in headwords]

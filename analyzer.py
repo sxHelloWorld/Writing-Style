@@ -21,8 +21,7 @@ class Analyzer:
         self.connection = pymysql.connect(host='ws-db.cxn6r23mlloe.us-east-1.rds.amazonaws.com', user='wsuser', password='', db='corpus')
         self.cursor = self.connection.cursor(pymysql.cursors.DictCursor)
 
-        self.informal_word_file = WordFile('words.txt')
-        print(self.informal_word_file.words)
+        self.informal_word_file = WordFile('words.csv')
 
     def _clean_text(self, text):
         cleaned_word = re.sub(r'([^\w])+|(\d)+', '', text)
@@ -93,8 +92,6 @@ class Analyzer:
             for headword in word_info.headwords:
                 if headword in headword_lookup:
                     headword_suggestions[headword] = headword_lookup[headword]
-                else:
-                    headword_suggestions[headword] = ['NONE FOUND']
 
             suggestion = Suggestion(word_info.index, word_info.word, headword_suggestions)
             suggestions.append(suggestion)
