@@ -1,5 +1,6 @@
 import re
 import pymysql
+import logging
 from word_file import WordFile
 
 class InformalWordInfo:
@@ -8,11 +9,19 @@ class InformalWordInfo:
         self.word = word
         self.headwords = headwords
 
+    def __str__(self):
+        return '%d %s - %s' % (self.index, self.word, ';'.join(self.headwords))
+    __repr__ = __str__
+
 class Suggestion:
     def __init__(self, index, word, suggestions):
         self.index = index
         self.word = word
         self.suggestions = suggestions
+
+    def __str__(self):
+        return '%d %s - %s' % (self.index, self.word, ';'.join(self.suggestions))
+    __repr__ = __str__
 
 class Analyzer:
     def __init__(self, writing):
@@ -71,21 +80,24 @@ class Analyzer:
         return query
 
     def _get_suggestions(self, informal_word_infos):
+        logging.debug('Informal word infos: ' + str(informal_word_infos))
         all_headwords_query = self._build_headword_synonym_query(informal_word_infos)
         self.cursor.execute(all_headwords_query)
 
         headword_synonym_data = self.cursor.fetchall()
+        logging.debug('Headword synonym data: ' + str(headword_synonym_data))
         if headword_synonym_data == None:
             return []
 
         # build a hash table to quickly look up the headwords words synonyms
         headword_lookup = {}
         for row in headword_synonym_data:
-            headword = row['headword'].strip()
+            headword = row['headword'].strip().upper()
             suggestions = row['group_concat(word)'].split(',')
 
             headword_lookup[headword] = suggestions
         
+        logging.debug('Headword lookup: ' + str(headword_lookup))
         suggestions = []
         for word_info in informal_word_infos:
             headword_suggestions = {}
@@ -96,6 +108,7 @@ class Analyzer:
             suggestion = Suggestion(word_info.index, word_info.word, headword_suggestions)
             suggestions.append(suggestion)
         
+        logging.debug('suggestions: ' + str(suggestions))
         return suggestions
         
     def _get_formality_for_words(self):
