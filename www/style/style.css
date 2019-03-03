@@ -332,10 +332,16 @@ header {
 
 .list-group-item-suggestion {
     border-radius: 0 !important;
+    display: flex !important;
+    justify-content: space-between;
 }
 .list-group-item-suggestion:hover {
     background: var(--color-theme-lightest);
     cursor: pointer;
+}
+
+.list-group-item-suggetion-jumpto {
+    color: lightgray;
 }
 
 .font-normal {

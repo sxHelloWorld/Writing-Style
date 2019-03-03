@@ -150,7 +150,12 @@ WritingAnalyzer.prototype.getInformalWordsHtml = function() {
 WritingAnalyzer.prototype._getListHtml = function(words, type) {
     let listHtml = '<ul class="list-group">';
     for (let word of words) {
-        listHtml += `<a id="${word.id}-list-item" href="#${word.id}" class="suggestion-anchor-link suggestion-link-${type}"><li class="list-group-item list-group-item-suggestion">${word.word}</li></a>`;
+        listHtml += `<a id="${word.id}-list-item" href="#${word.id}" class="suggestion-anchor-link suggestion-link-${type}">
+                        <li class="list-group-item list-group-item-suggestion">
+                            <span>${word.word}</span>
+                            <span class="list-group-item-suggetion-jumpto">jump to ↵</span>
+                        </li>
+                    </a>`;
     }
     listHtml += '</ul>';
 
