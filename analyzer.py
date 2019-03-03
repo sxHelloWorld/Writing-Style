@@ -17,7 +17,21 @@ class Suggestion:
     def __init__(self, index, word, suggestions):
         self.index = index
         self.word = word
-        self.suggestions = suggestions
+        self.suggestions = self._clean_suggestions(suggestions)
+
+    def _clean_suggestions(self, suggestions):
+        cleaned_suggestions = {}
+        for headword, suggs in suggestions.items():
+            cleaned_suggs = []
+            for sugg in suggs:
+                sugg_words = sugg.split(' ')
+                if len(sugg_words) <= 2:
+                    cleaned_suggs.append(sugg)
+            
+            if len(cleaned_suggs) > 0:
+                cleaned_suggestions[headword] = cleaned_suggs
+
+        return cleaned_suggestions
 
     def __str__(self):
         return '%d %s - %s' % (self.index, self.word, ';'.join(self.suggestions))
