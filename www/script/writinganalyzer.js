@@ -47,7 +47,12 @@ WritingAnalyzer.prototype.getSummary = function() {
     return summary;
 }
 
+WritingAnalyzer.prototype._cleanWord = function(word) {
+    return word.trim().replace(/[^\w\d]/, '');
+}
+
 WritingAnalyzer.prototype._getHtmlForWord = function(word, wordIndex) {
+    let cleanedWord = this._cleanWord(word);
     if (this.specifiedSuggestions) {
         // check if there's a specified suggestion for the current word
         let suggestionForCurrentWord = this.specifiedSuggestions.find(function (suggestion) {
@@ -56,8 +61,8 @@ WritingAnalyzer.prototype._getHtmlForWord = function(word, wordIndex) {
 
         if (suggestionForCurrentWord) {
             let suggestion = { 
-                word: word.trim(),
-                id: word.trim() + wordIndex,
+                word: cleanedWord,
+                id: cleanedWord + wordIndex,
                 suggestion: suggestionForCurrentWord
             };
             if (suggestionForCurrentWord.type === 'informal') {
@@ -66,10 +71,10 @@ WritingAnalyzer.prototype._getHtmlForWord = function(word, wordIndex) {
                 this.repeatedWords.push(suggestion);
             }
 
-            return this._getSuggestionHtml(word.trim(), word.trim() + wordIndex, suggestionForCurrentWord.type, 
+            return this._getSuggestionHtml(word, cleanedWord + wordIndex, suggestionForCurrentWord.type, 
                 suggestionForCurrentWord.replaceWords);
         } else {
-            return this._getWordHtml(word.trim(), word.trim() + wordIndex);
+            return this._getWordHtml(word, cleanedWord + wordIndex);
         }
     } 
 }
