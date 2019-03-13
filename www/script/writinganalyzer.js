@@ -127,7 +127,17 @@ WritingAnalyzer.prototype._getSuggestionHtml = function(word, wordId, type, repl
         <span class="highlight highlight-${type}-word span-word" id="${wordId}-word">${word}</span>
         <div class="highlight-suggestion highlight-suggestion-${type}-word">
             <button class="btn btn-primary highlight-btn-replace highlight-btn-replace-ignore highlight-btn-replace-ignore-${type}" data-replace-word="!!IGNORE!!" data-word-id="${wordId}">Ignore Suggestion</button>
+            <div class="ws-tabs">
+                <ul class="ws-tab-list">
+                    <li class="ws-tab-item" id="ws-tab-item-1">Desire</li>
+                    <li class="ws-tab-item" id="ws-tab-item-2">Yearn</li>
+                </ul>
+                <div class="ws-tab-content" id="ws-tab-content-1">
+                    <p>here is some sweet content</p>
+                </div>
+                <div class="ws-tab-content" id="ws-tab-content-2">
         `;
+
     for (let replaceWord of replaceWords) {
         let buttonHtml = `<button class="btn btn-primary highlight-btn-replace highlight-btn-replace-${type}" data-replace-word="${replaceWord}" data-word-id="${wordId}">${replaceWord}</button>`;
         suggestionTemplate += buttonHtml;
@@ -135,7 +145,9 @@ WritingAnalyzer.prototype._getSuggestionHtml = function(word, wordId, type, repl
     suggestionTemplate += `
         ${suggestionMessage}
     `;
-    suggestionTemplate += '</div>';
+    suggestionTemplate += '</div>'; // closes #tabs-2
+    suggestionTemplate += '</div>'; // closes .tabs
+    suggestionTemplate += '</div>'; // closes .highlight-suggestion
 
     return suggestionTemplate;
 };

@@ -353,6 +353,35 @@ header {
     font-style: normal;
 }
 
+.ws-tab-list {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 0;
+    margin: 0;
+}
+
+.ws-tab-item {
+    display: inline-block;
+    font-size: 1rem;
+    padding: 0.2rem;
+    cursor: pointer;
+
+    background: lightgray;
+}
+
+#ws-tab-item-1 {
+    background: white;
+}
+
+.ws-tab-content {
+    display: none;
+}
+
+#ws-tab-content-1 {
+    display: block;
+}
+
 #review-container {
     display: none;
 }

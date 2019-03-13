@@ -101,7 +101,7 @@ $(document).ready(function() {
 
             $('.highlight').on('mouseenter', function(e) {
                 var $suggestionBox = $(e.currentTarget).next('.highlight-suggestion');
-                if (!$(e.currentTarget).hasClass('highlight') || $(e.currentTarget).next('.highlight-suggestion').is(':animated') 
+                if (!$(e.currentTarget).hasClass('highlight') || $suggestionBox.is(':animated')
                     || replacingWord || $suggestionBox.data('recentlyClosedPopover')) {
 
                     return;
@@ -229,6 +229,28 @@ $(document).ready(function() {
 
                     replacingWord = true;
                     $('#highlight-suggestion-requested').toggle('fold');
+                });
+
+                // handle the tabs
+                $('.ws-tab-item').on('click', function(event) {
+                    let $tabItem = $(event.target);
+                    let $tabContainer = $tabItem.closest('.ws-tabs');
+
+                    let tabId = $tabItem.attr('id');
+
+                    let tabIdComponents = tabId.split('-');
+                    let tabNumberStr = tabIdComponents[tabIdComponents.length - 1];
+
+                    let tabContentIdToShow = 'ws-tab-content-' + tabNumberStr;
+                    
+                    // hide all of the tab content, then only show the tab selected
+                    $tabContainer.find('.ws-tab-content').css('display', 'none');
+                    $tabContainer.find('#' + tabContentIdToShow).css('display', 'block');
+
+                    // make the selected tab item have a white background and make all the
+                    // others that aren't selected gray
+                    $tabContainer.find('.ws-tab-item').css('background', 'lightgray');
+                    $tabItem.css('background', 'white');
                 });
             }
 
