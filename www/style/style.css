@@ -203,11 +203,11 @@ header {
     border-bottom-right-radius: 0.3rem !important;
 }
 
-.highlight-suggestion > .highlight-btn-replace-informal:not(:last-child) {
+.highlight-suggestion .highlight-btn-replace-informal:not(:last-child) {
     border-bottom: 1px solid var(--color-informal-word-light) !important;
 }
 
-.highlight-suggestion > .highlight-btn-replace-repeated:not(:last-child) {
+.highlight-suggestion .highlight-btn-replace-repeated:not(:last-child) {
     border-bottom: 1px solid var(--color-repeated-word-light) !important;
 }
 
@@ -361,13 +361,27 @@ header {
     margin: 0;
 }
 
+.ws-tab-list-informal {
+    border-bottom: 1px solid var(--color-informal-word-light);
+}
+
+.ws-tab-list-repeated {
+    border-bottom: 1px solid var(--color-repeated-word-light);
+}
+
 .ws-tab-item {
     display: inline-block;
     font-size: 1rem;
     padding: 0.2rem;
     cursor: pointer;
+}
 
-    background: lightgray;
+.ws-tab-item-informal {
+    background: var(--color-informal-word-light);
+}
+
+.ws-tab-item-repeated {
+    background: var(--color-repeated-word-light);
 }
 
 #ws-tab-item-1 {

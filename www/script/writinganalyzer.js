@@ -30,6 +30,7 @@ WritingAnalyzer.prototype.addReplaceWord = function(wordIndex, newWord) {
 }
 
 WritingAnalyzer.prototype.getSummary = function() {
+    /*
     let summary = 'Writing Style Analysis\n\n';
 
     summary += 'Repeated Words\n';
@@ -44,7 +45,8 @@ WritingAnalyzer.prototype.getSummary = function() {
     }
 
     summary += '\n';
-    return summary;
+    return summary;*/
+    return 'fix me';
 }
 
 WritingAnalyzer.prototype._cleanWord = function(word) {
@@ -115,7 +117,21 @@ WritingAnalyzer.prototype._getHtmlForAllText = function() {
     }
 }
 
-WritingAnalyzer.prototype._getSuggestionHtml = function(word, wordId, type, replaceWords, suggestionMessage) {
+WritingAnalyzer.prototype._getTitle = function(word) {
+    return word[0].toUpperCase() + word.substring(1).toLowerCase();
+}
+
+WritingAnalyzer.prototype._getWordSuggestionsHtml = function(wordId, type, words) {
+    var html = '';
+    for (let replaceWord of words) {
+        let buttonHtml = `<button class="btn btn-primary highlight-btn-replace highlight-btn-replace-${type}" data-replace-word="${replaceWord}" data-word-id="${wordId}">${replaceWord}</button>`;
+        html += buttonHtml;
+    }
+
+    return html;
+}
+
+WritingAnalyzer.prototype._getSuggestionHtml = function(word, wordId, type, replaceWords) {
     if (type === 'informal') {
         var suggestionMessage = '<p class="text-center highlight-suggestion-label highlight-suggestion-label-informal">Informal Word</p>';
     } else {
@@ -127,26 +143,44 @@ WritingAnalyzer.prototype._getSuggestionHtml = function(word, wordId, type, repl
         <span class="highlight highlight-${type}-word span-word" id="${wordId}-word">${word}</span>
         <div class="highlight-suggestion highlight-suggestion-${type}-word">
             <button class="btn btn-primary highlight-btn-replace highlight-btn-replace-ignore highlight-btn-replace-ignore-${type}" data-replace-word="!!IGNORE!!" data-word-id="${wordId}">Ignore Suggestion</button>
-            <div class="ws-tabs">
-                <ul class="ws-tab-list">
-                    <li class="ws-tab-item" id="ws-tab-item-1">Desire</li>
-                    <li class="ws-tab-item" id="ws-tab-item-2">Yearn</li>
-                </ul>
-                <div class="ws-tab-content" id="ws-tab-content-1">
-                    <p>here is some sweet content</p>
-                </div>
-                <div class="ws-tab-content" id="ws-tab-content-2">
         `;
 
-    for (let replaceWord of replaceWords) {
-        let buttonHtml = `<button class="btn btn-primary highlight-btn-replace highlight-btn-replace-${type}" data-replace-word="${replaceWord}" data-word-id="${wordId}">${replaceWord}</button>`;
-        suggestionTemplate += buttonHtml;
+    if (Object.keys(replaceWords).length > 1) {
+        
+        // add the html for the tabs
+        suggestionTemplate += `
+            <div class="ws-tabs">
+                <ul class="ws-tab-list ws-tab-list-${type}">
+            `;
+        let tabNumber = 1;
+        for (headword in replaceWords) {
+            let headwordTitle = this._getTitle(headword);
+            suggestionTemplate += `<li class="ws-tab-item ws-tab-item-${type}" id="ws-tab-item-${tabNumber}">${headwordTitle}</li>`;
+            tabNumber++;
+        }
+        suggestionTemplate += `</ul>`;
+
+        // add the html for the tab contents
+        let tabContentNumber = 1;
+        for (headword in replaceWords) {
+            let replaceWordList = replaceWords[headword];
+            suggestionTemplate += `
+            <div class="ws-tab-content" id="ws-tab-content-${tabContentNumber}">
+                ${this._getWordSuggestionsHtml(wordId, type, replaceWordList)}
+            </div>
+            `;
+
+            tabContentNumber++;
+        }
+        suggestionTemplate += '</div>'; // closes .ws-tabs
+    } else {
+        let replaceWordList = replaceWords[Object.keys(replaceWords)[0]];
+        suggestionTemplate += this._getWordSuggestionsHtml(wordId, type, replaceWordList);
     }
+
     suggestionTemplate += `
         ${suggestionMessage}
     `;
-    suggestionTemplate += '</div>'; // closes #tabs-2
-    suggestionTemplate += '</div>'; // closes .tabs
     suggestionTemplate += '</div>'; // closes .highlight-suggestion
 
     return suggestionTemplate;

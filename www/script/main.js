@@ -248,8 +248,9 @@ $(document).ready(function() {
                     $tabContainer.find('#' + tabContentIdToShow).css('display', 'block');
 
                     // make the selected tab item have a white background and make all the
-                    // others that aren't selected gray
-                    $tabContainer.find('.ws-tab-item').css('background', 'lightgray');
+                    // others that aren't selected colored
+                    $tabContainer.find('.ws-tab-item-informal').css('background', 'var(--color-informal-word-light');
+                    $tabContainer.find('.ws-tab-item-repeated').css('background', 'var(--color-repeated-word-light');
                     $tabItem.css('background', 'white');
                 });
             }

@@ -65,20 +65,20 @@ class Analyzer:
                 informal_word_info.append(word_info)
 
         suggestions = self._get_suggestions(informal_word_info)
-        old_suggestions = []
+        trimmed_suggestions = []
         for new_sugg in suggestions:
-            all_words = []
+            headword_suggs_trimmed = {}
             for headword in new_sugg.suggestions:
-                all_words.extend(new_sugg.suggestions[headword])
+                headword_suggs_trimmed[headword] = new_sugg.suggestions[headword][:5]
 
             suggestion = {
                 'index': new_sugg.index,
                 'type': 'informal',
-                'replaceWords': all_words[:5]
+                'replaceWords': headword_suggs_trimmed
             }
-            old_suggestions.append(suggestion)
+            trimmed_suggestions.append(suggestion)
 
-        return old_suggestions
+        return trimmed_suggestions
 
     def _build_headword_synonym_query(self, informal_word_infos):
         headwords = []
