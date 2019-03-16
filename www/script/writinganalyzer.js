@@ -29,24 +29,33 @@ WritingAnalyzer.prototype.addReplaceWord = function(wordIndex, newWord) {
     this.replaceWords[wordIndex] = newWord;
 }
 
+WritingAnalyzer.prototype._getSummaryForSuggestionList = function(suggList) {
+    let summary = '';
+    for (let improperWord of suggList) {
+        summary += improperWord.word + '\t->\t';
+
+        for (let headWord in improperWord.suggestion.replaceWords) {
+            let synonyms = improperWord.suggestion.replaceWords[headWord].join(', ');
+            summary += `${headWord}: ${synonyms}\n\t\t`;
+        }
+        summary += '\n';
+    }
+
+    return summary;
+}
+
 WritingAnalyzer.prototype.getSummary = function() {
-    /*
     let summary = 'Writing Style Analysis\n\n';
 
     summary += 'Repeated Words\n';
-    for (let repeatedWord of this.repeatedWords) {
-        summary += repeatedWord.word + '\t->\t' + repeatedWord.suggestion.replaceWords.join(', ') + '\n';
-    }
+    summary += this._getSummaryForSuggestionList(this.repeatedWords);
     summary += '\n';
 
     summary += 'Informal Words\n';
-    for (let informalWord of this.informalWords) {
-        summary += informalWord.word + '\t->\t' + informalWord.suggestion.replaceWords.join(', ') + '\n';
-    }
-
+    summary += this._getSummaryForSuggestionList(this.informalWords);
     summary += '\n';
-    return summary;*/
-    return 'fix me';
+
+    return summary;
 }
 
 WritingAnalyzer.prototype._cleanWord = function(word) {
