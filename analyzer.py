@@ -2,6 +2,7 @@ import re
 import pymysql
 import logging
 from word_file import WordFile
+import operator
 
 class InformalWordInfo:
     def __init__(self, index, word, headwords):
@@ -53,6 +54,8 @@ class Analyzer:
     def analyze(self):
         word_tokens = self.writing.split()
 
+        repeat_word_stats = {}
+
         # find all of the informal words
         informal_word_info = []
         for index, wtok in enumerate(word_tokens):
@@ -63,6 +66,12 @@ class Analyzer:
                 word_info = InformalWordInfo(index, word, headwords)
 
                 informal_word_info.append(word_info)
+
+            if repeat_word_stats.get(word) is None:
+                repeat_word_stats[word] = [1, str(index)]
+            else:
+                repeat_word_stats[word][0] += 1
+                repeat_word_stats[word][1] += "," + str(index)
 
         suggestions = self._get_suggestions(informal_word_info)
         trimmed_suggestions = []
@@ -77,6 +86,18 @@ class Analyzer:
                 'replaceWords': headword_suggs_trimmed
             }
             trimmed_suggestions.append(suggestion)
+
+        repeat_suggestions = self._get_repeat_suggestions(repeat_word_stats)
+        for new_sugg in repeat_suggestions:
+            index_array = repeat_word_stats[new_sugg[0]][1].split(',')
+            for index in index_array:
+                suggestion = {
+                'index': int(index),
+                'word': new_sugg[0],
+                'type': 'repeated',
+                'replaceWords': new_sugg[1]
+                }
+                trimmed_suggestions.append(suggestion)
 
         return trimmed_suggestions
 
@@ -125,6 +146,29 @@ class Analyzer:
         logging.debug('suggestions: ' + str(suggestions))
         return suggestions
         
+    def _get_repeat_suggestions(self, stats):
+        total_counter = 0
+        
+        for key, value in stats.items():
+            total_counter += value[0]
+
+        suggestions = []
+
+        # apply 5% to counter (total of word) to decide if there is enough repeated words in the content
+        selection = round(0.05 * total_counter)
+
+        if selection != 0:
+            # Sort by word's counter
+            sorted_by_counter = sorted(stats.items(), key=lambda kv: -kv[1][0])
+
+            for index in range(selection):
+                # Checks if word's counter is 5% or more of the content text
+                if (sorted_by_counter[index][1][0] / total_counter) > 0.05:
+                    # Placeholder for retrieving suggestions from Database
+                    suggestions.append([sorted_by_counter[index][0], ['placeholder']])
+
+        return suggestions
+
     def _get_formality_for_words(self):
         words = self._clean_text(self.writing).split()
         word_list = ', '.join(["'%s'" % w.lower() for w in words])
