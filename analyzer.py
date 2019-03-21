@@ -1,10 +1,30 @@
+'''
+Writing Style Web App Release 1
+Author: Adam Spindler
+Last Updated: March 21, 2019
+
+This analyzer.py provides the functionality for analyzing a given body of text, and providing suggestions for that piece of text. 
+
+'''
 import re
 import pymysql
 import logging
 from word_file import WordFile
 import operator
 
+'''
+Class representing an informal word and it's information 
+'''
 class InformalWordInfo:
+    '''
+    Creates instance of InformalWordInfo
+
+    @params
+    self - InformalWordInfo
+    index - int
+    word - String
+    headwords - list
+    '''
     def __init__(self, index, word, headwords):
         self.index = index
         self.word = word
@@ -14,12 +34,34 @@ class InformalWordInfo:
         return '%d %s - %s' % (self.index, self.word, ';'.join(self.headwords))
     __repr__ = __str__
 
+'''
+Class representing a suggestion and it's related information 
+'''
 class Suggestion:
+    '''
+    Creates instance of InformalWordInfo
+
+    @params
+    self - Suggestion
+    index - int
+    word - String
+    suggestions - list
+    '''
     def __init__(self, index, word, suggestions):
         self.index = index
         self.word = word
         self.suggestions = self._clean_suggestions(suggestions)
 
+    '''
+    Prunes and returns a list of suggestions 
+
+    @param
+    self - Suggestion
+    suggestions - list
+
+    @return
+    cleaned_suggestions - list
+    '''  
     def _clean_suggestions(self, suggestions):
         cleaned_suggestions = {}
         for headword, suggs in suggestions.items():
@@ -39,6 +81,13 @@ class Suggestion:
     __repr__ = __str__
 
 class Analyzer:
+    '''
+    Creates instance of Analyzer
+
+    @params
+    self - Analyzer
+    writing - String
+    '''
     def __init__(self, writing):
         self.writing = writing
 
@@ -46,11 +95,27 @@ class Analyzer:
         self.cursor = self.connection.cursor(pymysql.cursors.DictCursor)
 
         self.informal_word_file = WordFile('words.csv')
+    '''
+    Prunes and returns text
+    @param
+    self - Analyzer
+    text - list
 
+    @return
+    cleaned_word - list
+    '''  
     def _clean_text(self, text):
         cleaned_word = re.sub(r'([^\w])+|(\d)+', '', text)
         return cleaned_word
+    '''
+    Analyzes the writing associated with the Analyzer, returning a list of suggestions
     
+    @param
+    self - Analyzer
+
+    @return
+    trimmed_suggestions - list
+    '''  
     def analyze(self):
         word_tokens = self.writing.split()
 
@@ -100,7 +165,16 @@ class Analyzer:
                 trimmed_suggestions.append(suggestion)
 
         return trimmed_suggestions
-
+    '''
+    Builds a string in the proper format to be used in a database query
+    
+    @param
+    self - Analyzer
+    informal_word_infos - list
+    
+    @return
+    query - string
+    '''  
     def _build_headword_synonym_query(self, informal_word_infos):
         headwords = []
         for word_info in informal_word_infos:
@@ -113,7 +187,16 @@ class Analyzer:
                     'GROUP BY headword;'
 
         return query
-
+    '''
+    Creates a list of suggestions for the given informal words
+    
+    @param
+    self - Analyzer
+    informal_word_infos - list
+    
+    @return
+    suggestions - list
+    '''  
     def _get_suggestions(self, informal_word_infos):
         logging.debug('Informal word infos: ' + str(informal_word_infos))
         all_headwords_query = self._build_headword_synonym_query(informal_word_infos)
@@ -145,7 +228,16 @@ class Analyzer:
         
         logging.debug('suggestions: ' + str(suggestions))
         return suggestions
-        
+    '''
+    Creates a list of suggestions for words that meet the repeated word status 
+    
+    @param
+    self - Analyzer
+    stats - dict
+    
+    @return
+    suggestions - list
+    ''' 
     def _get_repeat_suggestions(self, stats):
         total_counter = 0
         
@@ -169,6 +261,15 @@ class Analyzer:
 
         return suggestions
 
+    '''
+    Queries the database to acquire the formality score for all the words inputted into the Analyzer
+    
+    @param
+    self - Analyzer
+    
+    @return
+    word_formality - list
+    ''' 
     def _get_formality_for_words(self):
         words = self._clean_text(self.writing).split()
         word_list = ', '.join(["'%s'" % w.lower() for w in words])
