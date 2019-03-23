@@ -153,18 +153,39 @@ class Analyzer:
             trimmed_suggestions.append(suggestion)
 
         repeat_suggestions = self._get_repeat_suggestions(repeat_word_stats)
-        for new_sugg in repeat_suggestions:
-            index_array = repeat_word_stats[new_sugg[0]][1].split(',')
-            for index in index_array:
-                suggestion = {
-                'index': int(index),
-                'word': new_sugg[0],
-                'type': 'repeated',
-                'replaceWords': new_sugg[1]
-                }
-                trimmed_suggestions.append(suggestion)
+        for repeat_sugg in repeat_suggestions:
+            word_index = repeat_sugg['index']
+
+            # make sure there isn't already a suggestion for this word index
+            found = False
+            for sugg in trimmed_suggestions:
+                if sugg['index'] == word_index:
+                    found = True
+                    break
+        
+            if not found:
+                trimmed_suggestions.append(repeat_sugg)
 
         return trimmed_suggestions
+    '''
+    Builds a string in the proper format to be used in a database query
+    from a list of informal_word_info
+    
+    @param
+    self - Analyzer
+    informal_word_infos - list
+    
+    @return
+    query - string
+    '''  
+    def _build_headword_synonym_query_from_informal(self, informal_word_infos):
+        headwords = []
+        for word_info in informal_word_infos:
+            for headword in word_info.headwords:
+                headwords.append("'%s'" % headword)
+
+        return self._build_headword_synonym_query(headwords)
+
     '''
     Builds a string in the proper format to be used in a database query
     
@@ -175,18 +196,43 @@ class Analyzer:
     @return
     query - string
     '''  
-    def _build_headword_synonym_query(self, informal_word_infos):
-        headwords = []
-        for word_info in informal_word_infos:
-            for headword in word_info.headwords:
-                headwords.append("'%s'" % headword)
-
+    def _build_headword_synonym_query(self, headwords):
         headwords_csv = ','.join(headwords)
         query = 'SELECT headword, group_concat(word) FROM thesaurus ' + \
                     'WHERE headword IN (%s) ' % headwords_csv + \
                     'GROUP BY headword;'
 
         return query
+
+    '''
+    Execute a query to find all of the synonyms for headwords
+
+    @param
+    self - Analyzer
+    query - str
+
+    @return
+    headword_lookup - dict
+    '''
+    def _execute_headword_query(self, query):
+        self.cursor.execute(query)
+
+        headword_synonym_data = self.cursor.fetchall()
+        logging.debug('Headword synonym data: ' + str(headword_synonym_data))
+        if headword_synonym_data == None:
+            return []
+
+        # build a hash table to quickly look up the headwords words synonyms
+        headword_lookup = {}
+        for row in headword_synonym_data:
+            print('row in headword_syn_data: ' + str(row))
+            headword = row['headword'].strip().upper()
+            suggestions = row['group_concat(word)'].split(',')
+
+            headword_lookup[headword] = suggestions
+
+        return headword_lookup
+
     '''
     Creates a list of suggestions for the given informal words
     
@@ -199,22 +245,10 @@ class Analyzer:
     '''  
     def _get_suggestions(self, informal_word_infos):
         logging.debug('Informal word infos: ' + str(informal_word_infos))
-        all_headwords_query = self._build_headword_synonym_query(informal_word_infos)
-        self.cursor.execute(all_headwords_query)
-
-        headword_synonym_data = self.cursor.fetchall()
-        logging.debug('Headword synonym data: ' + str(headword_synonym_data))
-        if headword_synonym_data == None:
-            return []
-
-        # build a hash table to quickly look up the headwords words synonyms
-        headword_lookup = {}
-        for row in headword_synonym_data:
-            headword = row['headword'].strip().upper()
-            suggestions = row['group_concat(word)'].split(',')
-
-            headword_lookup[headword] = suggestions
+        all_headwords_query = self._build_headword_synonym_query_from_informal(informal_word_infos)
         
+        headword_lookup = self._execute_headword_query(all_headwords_query)
+
         logging.debug('Headword lookup: ' + str(headword_lookup))
         suggestions = []
         for word_info in informal_word_infos:
@@ -249,6 +283,7 @@ class Analyzer:
         # apply 5% to counter (total of word) to decide if there is enough repeated words in the content
         selection = round(0.05 * total_counter)
 
+        repeated_words = []
         if selection != 0:
             # Sort by word's counter
             sorted_by_counter = sorted(stats.items(), key=lambda kv: -kv[1][0])
@@ -257,9 +292,89 @@ class Analyzer:
                 # Checks if word's counter is 5% or more of the content text
                 if (sorted_by_counter[index][1][0] / total_counter) > 0.05:
                     # Placeholder for retrieving suggestions from Database
-                    suggestions.append([sorted_by_counter[index][0], ['placeholder']])
+                    repeated_words.append(sorted_by_counter[index][0])
+
+        
+        headwords = self._get_headwords_for_words(repeated_words)
+        headword_query = self._build_headword_synonym_query(['\'%s\'' % w for w in list(headwords.values())])
+        headword_lookup = self._execute_headword_query(headword_query)
+
+        print('headwords')
+        print('#######')
+        print(headwords)
+        print()
+
+        print('headword_query')
+        print('#####')
+        print(headword_query)
+        print()
+
+        print('headword lookup')
+        print('#####')
+        print(headword_lookup)
+
+        # create the suggestion objects
+        for word in repeated_words:
+            headword = headwords[word].strip().upper()
+            synonyms = headword_lookup[headword]
+
+            indices_str = stats[word][1].split(',')
+            for index_str in indices_str:
+                index = int(index_str)
+                suggestion = {
+                    'index': index,
+                    'type': 'repeated',
+                    'replaceWords': {
+                        headword: synonyms[:5]
+                    }
+                } 
+
+                suggestions.append(suggestion)
 
         return suggestions
+
+    '''
+    Get the headwords for each of the words
+
+    @param
+    self - Analyzer
+    words - list of words to get the headwords of
+    
+    @return
+    word_headwords - dict
+    '''
+    def _get_headwords_for_words(self, words):
+        query = self._build_get_headwords_query(words)
+        self.cursor.execute(query)
+
+        word_headwords = {}
+        headword_result = self.cursor.fetchall()
+        for row in headword_result:
+            word = row['word']
+            headword = row['headword']
+
+            if word not in word_headwords:
+                word_headwords[word] = headword
+        
+        return word_headwords
+
+    '''
+    Creates a query to find the headwords that each of the words corresponds to
+
+    @param
+    self - Analayzer
+    words - list of words to get the headwords of
+
+    @return
+    query - str
+    '''
+    def _build_get_headwords_query(self, words):
+        query = 'SELECT word, headword FROM thesaurus WHERE word IN(%s);'
+        word_strs = ['\'%s\'' % w for w in words]
+        
+        query_final = query % ', '.join(word_strs)
+
+        return query_final
 
     '''
     Queries the database to acquire the formality score for all the words inputted into the Analyzer
