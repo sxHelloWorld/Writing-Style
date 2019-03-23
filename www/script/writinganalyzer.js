@@ -1,3 +1,15 @@
+/*
+Writing Style Web App Release 1
+Author: Adam Spindler
+Last Updated: March 16, 2019
+
+*/
+
+/**
+ * Constructor for a new instance of the WritingAnalyzer object
+ * 
+ * @param {string} text The text to analyze
+ */
 function WritingAnalyzer(text) {
     this.text = text;
     this.htmlContent = '';
@@ -5,6 +17,10 @@ function WritingAnalyzer(text) {
     this.informalWords = [];
 }
 
+/**
+ * Remove suggestions from a word, used to ignore a suggestion for
+ * particular word.
+ */
 WritingAnalyzer.prototype.removeWord = function(wordId) {
     var repeatedWordObjIndex = this.repeatedWords.findIndex(function (word) {
         return word.id === wordId;
@@ -21,14 +37,16 @@ WritingAnalyzer.prototype.removeWord = function(wordId) {
     }
 };
 
+/**
+ * Get the HTML that displays the analyzed text.
+ */
 WritingAnalyzer.prototype.getEditorHtml = function() {
     return this.htmlContent;
 };
 
-WritingAnalyzer.prototype.addReplaceWord = function(wordIndex, newWord) {
-    this.replaceWords[wordIndex] = newWord;
-}
-
+/**
+ * Get text for the summary text file for a list of suggestions.
+ */
 WritingAnalyzer.prototype._getSummaryForSuggestionList = function(suggList) {
     let summary = '';
     for (let improperWord of suggList) {
@@ -44,6 +62,10 @@ WritingAnalyzer.prototype._getSummaryForSuggestionList = function(suggList) {
     return summary;
 }
 
+/**
+ * Get the text content of the summary file which contains an overview
+ * of all the suggestions that the analyzer made.
+ */
 WritingAnalyzer.prototype.getSummary = function() {
     let summary = 'Writing Style Analysis\n\n';
 
@@ -58,10 +80,19 @@ WritingAnalyzer.prototype.getSummary = function() {
     return summary;
 }
 
+/**
+ * Remove any punctuation from a word.
+ */
 WritingAnalyzer.prototype._cleanWord = function(word) {
     return word.trim().replace(/[^\w\d]/, '');
 }
 
+/**
+ * Get the HTML for a single word. If it doesn't have any suggestions
+ * it will just be wrapped in a span, if it does have suggestions then
+ * it will be wrapped in a span with the appropriate color underline
+ * and there will also be a hidden div for the suggestion popover.
+ */
 WritingAnalyzer.prototype._getHtmlForWord = function(word, wordIndex) {
     let cleanedWord = this._cleanWord(word);
     if (this.specifiedSuggestions) {
@@ -90,6 +121,10 @@ WritingAnalyzer.prototype._getHtmlForWord = function(word, wordIndex) {
     } 
 }
 
+/**
+ * Analyze all of the text, takes a callback function which will be 
+ * passed the HTML with the suggestions embedded.
+ */
 WritingAnalyzer.prototype.analyze = function(done) {
     $.ajax({
         url: '/analyze',
@@ -109,6 +144,10 @@ WritingAnalyzer.prototype.analyze = function(done) {
     }.bind(this));
 }
 
+/**
+ * Determine the HTML content to display all of the text with the 
+ * suggestions.
+ */
 WritingAnalyzer.prototype._getHtmlForAllText = function() {
     let paragraphs = this.text.split(/\t|\n\n/);
     this.htmlContent = '';
@@ -126,10 +165,17 @@ WritingAnalyzer.prototype._getHtmlForAllText = function() {
     }
 }
 
+/**
+ * Make the first letter of the string uppercase and the rest lowercase.
+ */
 WritingAnalyzer.prototype._getTitle = function(word) {
     return word[0].toUpperCase() + word.substring(1).toLowerCase();
 }
 
+/**
+ * Get the HTML to be displayed in the popover for each of the suggested 
+ * replace words.
+ */
 WritingAnalyzer.prototype._getWordSuggestionsHtml = function(wordId, type, words) {
     var html = '';
     for (let replaceWord of words) {
@@ -140,6 +186,9 @@ WritingAnalyzer.prototype._getWordSuggestionsHtml = function(wordId, type, words
     return html;
 }
 
+/**
+ * Get the HTML for the suggestion popover for a single word.
+ */
 WritingAnalyzer.prototype._getSuggestionHtml = function(word, wordId, type, replaceWords) {
     if (type === 'informal') {
         var suggestionMessage = '<p class="text-center highlight-suggestion-label highlight-suggestion-label-informal">Informal Word</p>';
@@ -195,18 +244,33 @@ WritingAnalyzer.prototype._getSuggestionHtml = function(word, wordId, type, repl
     return suggestionTemplate;
 };
 
+/**
+ * Get the HTML for the span to wrap a word with no suggestions.
+ */
 WritingAnalyzer.prototype._getWordHtml = function(word, wordId) {
     return `<span class="span-word" id="${wordId}-word">${word} </span>`;
 };
 
+/**
+ * Get the HTML for the list of repeated words displayed on the
+ * right side of the screen.
+ */
 WritingAnalyzer.prototype.getRepeatedWordsHtml = function() {
     return this._getListHtml(this.repeatedWords, 'repeated');
 }
 
+/**
+ * Get the HTML for the list of informal words displayed on the
+ * right side of the screen.
+ */
 WritingAnalyzer.prototype.getInformalWordsHtml = function() {
     return this._getListHtml(this.informalWords, 'informal');
 }
 
+/**
+ * Get the HTML for the list of either repeated or informal words
+ * displayed on the right side of the screen.
+ */
 WritingAnalyzer.prototype._getListHtml = function(words, type) {
     let listHtml = '<ul class="list-group">';
     for (let word of words) {

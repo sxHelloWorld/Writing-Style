@@ -1,3 +1,8 @@
+/**
+ * Update the number of informal and repeated words displayed in the UI.
+ * 
+ * @param {WritingAnalyzer} analyzer The WritingAnalyzer object
+ */
 function updateDisplaySuggestionCounts(analyzer) {
     $('#titleinformalWords').text(`[${analyzer.informalWords.length}] Informal Words`);
     $('#titleRepeatedWords').text(`[${analyzer.repeatedWords.length}] Repeated Words`);
@@ -6,6 +11,9 @@ function updateDisplaySuggestionCounts(analyzer) {
     $('#titleIssueWords').text(`${totalIssueCount} Issues`)
 }
 
+/**
+ * Get the HTML that is currently selected by the user.
+ */
 // modified from: https://stackoverflow.com/a/5670825
 function getSelectionHtml() {
     var html = "";
@@ -35,30 +43,23 @@ function getSelectionHtml() {
     };
 }
 
-function getWordIndexFromLetterIndex(text, letterIndex) {
-    let words = text.split(' ');
-
-    let letterCounts = 0;
-    let wordCount = 0;
-
-    for (let word of words) {
-        // add 1 for the space
-        letterCounts += word.length + 1;
-        if (letterCounts > letterIndex) {
-            return wordCount;
-        }
-
-        wordCount++;
-    }
-
-    return -1;
-}
-
+/**
+ * Boolean indicating if this is the first time that the writing sample
+ * has been analyzed.
+ */
 var firstTime = true;
+
+/**
+ * Wait until the DOM has loaded
+ */
 $(document).ready(function() {
     var replacingWord = false;
     var selectedWordInfo = undefined;
 
+    /**
+     * Called when the user presses the back button to go back to the 
+     * text input page.
+     */
     $('#back-button').on('click', function() {
         window.scrollTo(0, 0);
 
@@ -75,6 +76,9 @@ $(document).ready(function() {
         $('.highlight-suggestion').off();
     });
 
+    /**
+     * Called when the user presses the analyze button
+     */
     $('#analyze-button').on('click', function() {
         window.scrollTo(0, 0);
         $('#submission-container').css('display', 'none');
@@ -82,6 +86,10 @@ $(document).ready(function() {
 
         let textToAnalyze = $('.content-input').val();
         let analyzer = new WritingAnalyzer(textToAnalyze);
+
+        /**
+         * Called when the server responds with the analysis result
+         */
         analyzer.analyze(function() {
             $('#editor').html(analyzer.getEditorHtml());
             $('#informalWordsCard').html(analyzer.getInformalWordsHtml());
@@ -92,6 +100,10 @@ $(document).ready(function() {
             let summaryUrl = 'data:application/octet-stream;charset=utf-8;base64,' + btoa(analyzer.getSummary());
             $('#btn-summary').attr('href', summaryUrl);
 
+            /**
+             * Called when the user moves their cursor off a word with
+             * suggestions.
+             */
             $('.highlight').on('mouseleave', function(e) {
                 $(e.currentTarget).data('mouseover', false);
                 
@@ -99,6 +111,10 @@ $(document).ready(function() {
                 handleClosingHighlightSuggestion($suggestionBox);
             });
 
+            /**
+             * Called when the user brings their mouse over over a word
+             * with suggestions.
+             */
             $('.highlight').on('mouseenter', function(e) {
                 var $suggestionBox = $(e.currentTarget).next('.highlight-suggestion');
                 if (!$(e.currentTarget).hasClass('highlight') || $suggestionBox.is(':animated')
@@ -138,15 +154,27 @@ $(document).ready(function() {
             });
 
 
+            /**
+             * Called when the user brings their cusor over the suggestion
+             * popover.
+             */
             $('.highlight-suggestion').on('mouseenter', function(e) {
                 $(e.currentTarget).data('mouseover', true);
             });
 
-            // handle closing the suggestion popover when the user moves their mouse off it
+            /**
+             * Called when the user moves their mouse off the suggestion
+             * popover to hide it.
+             */ 
             $('.highlight-suggestion').on('mouseleave', function(e) {
                 handleClosingHighlightSuggestion($(e.currentTarget));
             });
 
+            /**
+             * Close the suggestion popover if the user has their cusor off it
+             * for more than 300ms.
+             * @param {jQuery popover object} $suggestionBox 
+             */
             function handleClosingHighlightSuggestion($suggestionBox) {
                 $suggestionBox.data('mouseover', false);
                 if (replacingWord) {
@@ -170,13 +198,19 @@ $(document).ready(function() {
                 }, 300);
             }
 
-            // handle jumping to a word when pressing the link
+            /**
+             * Called when a user clicks on a word in the panel on the
+             * right, they will be scrolled down to the word and it will pulse.
+             */
             $('.suggestion-anchor-link').on('click', function(e) {
                 let wordId = e.currentTarget.getAttribute('href').replace('#', '');
                 $('#' + wordId + '-word').animateCss('heartBeat');
             });
 
-            // handle when the user replaces a word
+            /**
+             * Called when the user selects a word in the suggestion popover to
+             * replace the word that has an issue with it.
+             */
             $('.highlight-btn-replace').on('click', function(e) {
                 var wordId = $(e.currentTarget).attr('data-word-id');
                 var wordToReplaceWith = $(e.currentTarget).attr('data-replace-word');
@@ -200,7 +234,11 @@ $(document).ready(function() {
             if (firstTime) {
                 firstTime = false;
                 
-                // handle changing the chevron direction when folding/unfolding the accordian
+                /**
+                 * Called when the user expands or contracts a section on the 
+                 * panel on the right. Change the chevron to point in the right
+                 * direction depending on if it's being opened or closed.
+                 */
                 $('.card-header-suggestion').on('click', function(e) {
                     let $chevron = $(e.currentTarget).find('.chevron');
                     if ($chevron.hasClass('fa-chevron-up')) {
@@ -212,7 +250,9 @@ $(document).ready(function() {
                     }
                 });
 
-                // handle when the user clicks on a requested word to replace with
+                /**
+                 * Called when a user clicks on a repeated word to replace.
+                 */
                 $('.list-group-item-suggestion-repeated').on('click', function(event) {
                     if (selectedWordInfo) {
                         // add a period if the original word had it
@@ -231,7 +271,11 @@ $(document).ready(function() {
                     $('#highlight-suggestion-requested').toggle('fold');
                 });
 
-                // handle the tabs
+                /**
+                 * Called when a user clicks on a tab in the suggestion popover.
+                 * Note: tabs only appear if there are multiple definitions for
+                 * the word used in the writing sample.
+                 */
                 $('.ws-tab-item').on('click', function(event) {
                     let $tabItem = $(event.target);
                     let $tabContainer = $tabItem.closest('.ws-tabs');
@@ -255,7 +299,10 @@ $(document).ready(function() {
                 });
             }
 
-            // handle when the user double clicks a word to bring up the requested word popover
+            /**
+             * Handle when a user double clicks on a word to bring up a list of
+             * synonyms.
+             */
             $('.span-word').on('dblclick', function(event) {
                 if ($(event.currentTarget).hasClass('highlight')) {
                     return;
