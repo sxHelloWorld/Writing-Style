@@ -184,6 +184,9 @@ class Analyzer:
             for headword in word_info.headwords:
                 headwords.append("'%s'" % headword)
 
+        if len(headwords) == 0:
+            return None
+
         return self._build_headword_synonym_query(headwords)
 
     '''
@@ -247,6 +250,8 @@ class Analyzer:
         logging.debug('Informal word infos: ' + str(informal_word_infos))
         all_headwords_query = self._build_headword_synonym_query_from_informal(informal_word_infos)
         
+        if all_headwords_query is None:
+            return []
         headword_lookup = self._execute_headword_query(all_headwords_query)
 
         logging.debug('Headword lookup: ' + str(headword_lookup))
