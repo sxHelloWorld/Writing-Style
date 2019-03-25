@@ -294,42 +294,32 @@ class Analyzer:
                     # Placeholder for retrieving suggestions from Database
                     repeated_words.append(sorted_by_counter[index][0])
 
+        if len(repeated_words) == 0:
+            return []
         
         headwords = self._get_headwords_for_words(repeated_words)
         headword_query = self._build_headword_synonym_query(['\'%s\'' % w for w in list(headwords.values())])
         headword_lookup = self._execute_headword_query(headword_query)
 
-        print('headwords')
-        print('#######')
-        print(headwords)
-        print()
-
-        print('headword_query')
-        print('#####')
-        print(headword_query)
-        print()
-
-        print('headword lookup')
-        print('#####')
-        print(headword_lookup)
 
         # create the suggestion objects
         for word in repeated_words:
-            headword = headwords[word].strip().upper()
-            synonyms = headword_lookup[headword]
+            if word in headwords:
+                headword = headwords[word].strip().upper()
+                synonyms = headword_lookup[headword]
 
-            indices_str = stats[word][1].split(',')
-            for index_str in indices_str:
-                index = int(index_str)
-                suggestion = {
-                    'index': index,
-                    'type': 'repeated',
-                    'replaceWords': {
-                        headword: synonyms[:5]
-                    }
-                } 
+                indices_str = stats[word][1].split(',')
+                for index_str in indices_str:
+                    index = int(index_str)
+                    suggestion = {
+                        'index': index,
+                        'type': 'repeated',
+                        'replaceWords': {
+                            headword: synonyms[:5]
+                        }
+                    } 
 
-                suggestions.append(suggestion)
+                    suggestions.append(suggestion)
 
         return suggestions
 
