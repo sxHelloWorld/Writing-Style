@@ -12,6 +12,8 @@ import logging
 from word_file import WordFile
 import operator
 
+stopwords = ["i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"]
+
 '''
 Class representing an informal word and it's information 
 '''
@@ -119,24 +121,32 @@ class Analyzer:
     def analyze(self):
         word_tokens = self.writing.split()
 
+        cleaned_word_tokens = []
+        for wtok in word_tokens:
+            word = self._clean_text(wtok).lower()
+            cleaned_word_tokens.append(word)
+
+        root_words = self._get_root_words_for_words(cleaned_word_tokens)
+        print(root_words)
+
         repeat_word_stats = {}
 
         # find all of the informal words
         informal_word_info = []
-        for index, wtok in enumerate(word_tokens):
-            word = self._clean_text(wtok).lower()
+        for index, word in enumerate(cleaned_word_tokens):
+            root_word = root_words[word]
 
-            if word in self.informal_word_file.words:
-                headwords = self.informal_word_file.words[word]
-                word_info = InformalWordInfo(index, word, headwords)
+            if root_word in self.informal_word_file.words:
+                headwords = self.informal_word_file.words[root_word]
+                word_info = InformalWordInfo(index, root_word, headwords)
 
                 informal_word_info.append(word_info)
 
-            if repeat_word_stats.get(word) is None:
-                repeat_word_stats[word] = [1, str(index)]
+            if repeat_word_stats.get(root_word) is None:
+                repeat_word_stats[root_word] = [1, str(index)]
             else:
-                repeat_word_stats[word][0] += 1
-                repeat_word_stats[word][1] += "," + str(index)
+                repeat_word_stats[root_word][0] += 1
+                repeat_word_stats[root_word][1] += "," + str(index)
 
         suggestions = self._get_suggestions(informal_word_info)
         trimmed_suggestions = []
@@ -228,7 +238,6 @@ class Analyzer:
         # build a hash table to quickly look up the headwords words synonyms
         headword_lookup = {}
         for row in headword_synonym_data:
-            print('row in headword_syn_data: ' + str(row))
             headword = row['headword'].strip().upper()
             suggestions = row['group_concat(word)'].split(',')
 
@@ -297,15 +306,18 @@ class Analyzer:
                 # Checks if word's counter is 5% or more of the content text
                 if (sorted_by_counter[index][1][0] / total_counter) > 0.05:
                     # Placeholder for retrieving suggestions from Database
-                    repeated_words.append(sorted_by_counter[index][0])
+                    repeated_word = sorted_by_counter[index][0]
+                    if repeated_word not in stopwords:
+                        repeated_words.append(repeated_word)
 
         if len(repeated_words) == 0:
             return []
-        
+
         headwords = self._get_headwords_for_words(repeated_words)
+        if len(headwords) == 0:
+            return []
         headword_query = self._build_headword_synonym_query(['\'%s\'' % w for w in list(headwords.values())])
         headword_lookup = self._execute_headword_query(headword_query)
-
 
         # create the suggestion objects
         for word in repeated_words:
@@ -394,3 +406,20 @@ class Analyzer:
             word_formality[row['regWord']] = row['formalityScore']
 
         return word_formality
+
+    def _get_root_words_for_words(self, words):
+        query = 'SELECT DISTINCT word, lemma FROM lemmas WHERE word IN (' + \
+            ','.join(['\'%s\'' % w for w in words]) + ');'
+        self.cursor.execute(query)
+
+        root_word_rows = self.cursor.fetchall()
+        root_words = {}
+        
+        for row in root_word_rows:
+            root_words[row['word']] = row['lemma']
+
+        for word in words:
+            if word not in root_words:
+                root_words[word] = word
+    
+        return root_words
