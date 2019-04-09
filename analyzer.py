@@ -127,7 +127,6 @@ class Analyzer:
             cleaned_word_tokens.append(word)
 
         root_words = self._get_root_words_for_words(cleaned_word_tokens)
-        print(root_words)
 
         repeat_word_stats = {}
 
@@ -270,6 +269,11 @@ class Analyzer:
             for headword in word_info.headwords:
                 if headword in headword_lookup:
                     headword_suggestions[headword] = headword_lookup[headword]
+
+                    # remove the original word from the list of suggested words if it
+                    # appears in there
+                    if word_info.word in headword_suggestions[headword]:
+                        headword_suggestions[headword].remove(word_info.word)
 
             suggestion = Suggestion(word_info.index, word_info.word, headword_suggestions)
             suggestions.append(suggestion)
