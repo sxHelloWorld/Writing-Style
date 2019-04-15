@@ -1,3 +1,11 @@
+'''
+Writing Style Web App Release 1
+Author: Steven McClusky
+Last Updated: April 14, 2019
+
+This app.py implements Flask app to serve website and interact with analyzer.py through POST and GET requests
+
+'''
 from flask import Flask, render_template, request
 from flask_cors import CORS
 import pymysql
@@ -5,15 +13,33 @@ import json
 import urllib
 from analyzer import Analyzer
 
+'''
+Initialize variables and set up Flask app to execute web app
+'''
 app = Flask(__name__, static_url_path='/static', static_folder='www')
+# Enable Cross-Origin Resource Sharing (CORS) to allow external website to pull data from this web app
 CORS(app)
+# Add extension to Flask app to render from template in .pug files
 app.jinja_env.add_extension('pypugjs.ext.jinja.PyPugJSExtension')
 
+# MySQL Database connection information
 db_user = "wsuser"
 db_password = ""
 db_host = "ws-db.cxn6r23mlloe.us-east-1.rds.amazonaws.com"
 
 
+'''
+Initialize the connection to MySQL. The function optimize the connection information based on parameters
+
+@param
+table - str
+user - str
+password - str
+host - str
+
+@return
+pymysql.connection.Connection
+'''
 def getconnectionDB(table, user, password='', host=None):
     if host == None:
         host = db_host
@@ -22,16 +48,26 @@ def getconnectionDB(table, user, password='', host=None):
     return pymysql.connect(host=host, user=user, db=table)
 
 
+'''
+The web app home page
+
+@return
+response - str
+'''
 @app.route("/")
 def main():
-    return "Hello docker!"
-
-
-@app.route("/prototype")
-def prototype():
     return render_template('index.pug')
 
+'''
+Query to analyze the text through HTML POST request
 
+The params are given by the "request" variable
+@params
+data - str
+
+@return
+json - str
+'''
 @app.route('/analyze', methods=['POST'])
 def analyze():
     writing_sample_data = request.data
@@ -48,23 +84,18 @@ def analyze():
         return '[]'
 
 
-@app.route("/test")
-def test():
-    conn = getconnectionDB('corpus', db_user, db_password)
-    cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM new_table_python")
-    data = cursor.fetchall()
-    conn.close()
-    if len(data) != 0:
-        return str(data[0])
-    return "Hello docker!"
+'''
+The page comes with several choices for the top informal words and submit the choice for each word
 
+The params are given by the "request" variable
+@params
+word - str
+wordid - str
+choice - str
 
-@app.route("/test2")
-def test2():
-    return render_template('test2.pug')
-
-
+@return
+response - str
+'''
 @app.route("/surveyQuery")
 def surveyQuery():
     # Format for return data is
@@ -115,12 +146,17 @@ def surveyQuery():
 
     return wordid + ";" + currentWord + ";" + ";".join(x[0].strip() for x in data)
 
+'''
+Query the Database to get all words with the headwordnumber and groupnumber
 
-@app.route("/getAllWordList")
-def getAllWordList():
-    word = request.args.get('word')
+The params are given by the "request" variable
+@params
+headwordnumber - str
+groupnumber - str
 
-
+@return
+response - str
+'''
 @app.route("/getwordlist")
 def getwordlist():
     headwordnumber = request.args.get('head', default='', type=str)
@@ -145,6 +181,16 @@ def getwordlist():
     return "notfound"
 
 
+'''
+Query the database to get headwordnumber, groupnumber, and subgroup from the word
+
+The params are given by the "request" variable
+@params
+wordToFind - str
+
+@return
+response - str
+'''
 @app.route("/getheadlist")
 def getheadlist():
     wordToFind = request.args.get('data', default='', type=str)
@@ -159,5 +205,8 @@ def getheadlist():
     return "notfound"
 
 
+'''
+Run the Flask app to serve web app at port 80
+'''
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=80)
